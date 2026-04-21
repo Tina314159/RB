@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 ip = "192.168.1.1"
 sensor45 = Sensor(ip)
 
+sensor45.tare(100)   # average 100 samples
+print("Tare complete")
+
 forcePerCount = 224808.9 # for mini58, use 224808.9 for output in N
 torquePerCount = 8850746 # for mini58, use 8850746 for Nm
 
@@ -46,7 +49,7 @@ try:
         if printSetting == 1:
             print(f"t:{current_time:.2f} | Fx:{fx:.2f}, Fy:{fy:.2f}, Fz:{fz:.2f}, Tx:{tx:.2f}, Ty:{ty:.2f}, Tz:{tz:.2f}")
 
-        time.sleep(0.01)
+        time.sleep(0.02)
 
 except KeyboardInterrupt:
     print("stopping early")
