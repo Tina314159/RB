@@ -18,7 +18,7 @@ torquePerCount = 1000000 # for mini45, use 8850746 for Nm
 
 ######################## test/display settings #####################
 printSetting = 1  # 1 = print in terminal, 0 = don't print 
-duration = 10  # seconds
+duration = 30  # seconds
 
 ######################## data collection ###########################
 t_vals = []
@@ -53,7 +53,7 @@ try:
         if printSetting == 1:
             print(f"t:{current_time:.2f} | Fx:{fx:.2f}, Fy:{fy:.2f}, Fz:{fz:.2f}, Tx:{tx:.2f}, Ty:{ty:.2f}, Tz:{tz:.2f}")
 
-        time.sleep(0.02)
+        time.sleep(0.002)
 
 except KeyboardInterrupt:
     print("stopping early")
