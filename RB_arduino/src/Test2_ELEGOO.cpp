@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 const int TRIGGER_PIN = 2; // Hardware interrupt pin
 volatile bool triggered = false;
 
