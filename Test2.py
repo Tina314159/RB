@@ -14,43 +14,55 @@ torquePerCount = 1000000 # for mini45
 
 ######################## test/display settings #####################
 printSetting = 1  # 1 = print in terminal, 0 = don't print 
-duration = 30  # seconds
+duration = 10  # seconds
+sample_rate = 50.0  # Hz
 
 ######################## data collection function ###########################
 def collect_data():
     t_vals = []
     fx_vals, fy_vals, fz_vals = [], [], []
     tx_vals, ty_vals, tz_vals = [], [], []
+    
+    dt = 1.0 / sample_rate
 
-    start_time = time.time()
+    start_time = time.perf_counter()
+    next_sample_time = start_time
+
     try:
-        while (time.time() - start_time) < duration:
-            current_time = time.time() - start_time
-            
-            data = sensor45.getMeasurement()
-            fx, fy, fz, tx, ty, tz = data
+        while (time.perf_counter() - start_time) < duration:
+            now = time.perf_counter()
 
-            # Convert units
-            fx /= forcePerCount
-            fy /= forcePerCount
-            fz /= forcePerCount
-            tx /= torquePerCount
-            ty /= torquePerCount
-            tz /= torquePerCount
+            if now >= next_sample_time:
+                current_time = now - start_time
 
-            # Store data
-            t_vals.append(current_time)
-            fx_vals.append(fx)
-            fy_vals.append(fy)
-            fz_vals.append(fz)
-            tx_vals.append(tx)
-            tx_vals.append(ty)
-            tz_vals.append(tz)
+                data = sensor45.getMeasurement()
+                fx, fy, fz, tx, ty, tz = data
 
-            if printSetting == 1:
-                print(f"t:{current_time:.2f} | Fx:{fx:.2f}, Fy:{fy:.2f}, Fz:{fz:.2f}, Tx:{tx:.2f}, Ty:{ty:.2f}, Tz:{tz:.2f}")
-            
-            time.sleep(0.002)
+                # Convert units
+                fx /= forcePerCount
+                fy /= forcePerCount
+                fz /= forcePerCount
+                tx /= torquePerCount
+                ty /= torquePerCount
+                tz /= torquePerCount
+
+                # Store data
+                t_vals.append(current_time)
+                fx_vals.append(fx)
+                fy_vals.append(fy)
+                fz_vals.append(fz)
+                tx_vals.append(tx)
+                ty_vals.append(ty)
+                tz_vals.append(tz)
+
+                if printSetting == 1:
+                    print(f"t:{current_time:.4f} | Fx:{fx:.2f}, Fy:{fy:.2f}, Fz:{fz:.2f}, Tx:{tx:.2f}, Ty:{ty:.2f}, Tz:{tz:.2f}")
+
+                next_sample_time += dt
+
+            else:
+                # sleep just a tiny bit to avoid CPU burn
+                time.sleep(0.001)
 
     except KeyboardInterrupt:
         print("Stopping early")
