@@ -58,7 +58,7 @@ def collect_data():
     return t_vals, fx_vals, fy_vals, fz_vals, tx_vals, ty_vals, tz_vals
 
 ######################## Trigger setup ###########################
-ser = serial.Serial('COM3', 115200, timeout=10)
+ser = serial.Serial('COM3', 115200, timeout=20)
 print("Waiting for trigger from Elegoo...")
 while True:
     line = ser.readline().decode('utf-8').strip()
