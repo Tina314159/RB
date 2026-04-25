@@ -9,8 +9,12 @@ sensor45 = Sensor(ip)
 sensor45.tare(100)   # average 100 samples
 print("Tare complete")
 
-forcePerCount = 224808.9 # for mini58, use 224808.9 for output in N
-torquePerCount = 8850746 # for mini58, use 8850746 for Nm
+#forcePerCount = 224808.9 # for mini58, use 224808.9 for output in N
+#torquePerCount = 8850746 # for mini58, use 8850746 for Nm
+
+# mini45 FT46847 = SI-290-10
+forcePerCount = 1000000 # for mini45, use 224808.9 for output in N
+torquePerCount = 1000000 # for mini45, use 8850746 for Nm
 
 ######################## test/display settings #####################
 printSetting = 1  # 1 = print in terminal, 0 = don't print 
