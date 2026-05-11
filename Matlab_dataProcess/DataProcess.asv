@@ -1,0 +1,47 @@
+%% Plot data from load cell and myRio
+clear;
+clc;
+
+%% Load load cell data
+data = load("../data/loadcell_data.mat");
+
+% Extract variables
+t  = data.t;
+
+Fx = data.Fx;
+Fy = data.Fy;
+Fz = data.Fz;
+
+Tx = data.Tx;
+Ty = data.Ty;
+Tz = data.Tz;
+
+%% Plot Forces
+figure;
+
+plot(t, Fx, 'LineWidth', 1.5);
+hold on;
+plot(t, Fy, 'LineWidth', 1.5);
+plot(t, Fz, 'LineWidth', 1.5);
+
+xlabel('Time (s)');
+ylabel('Force (N)');
+title('Load Cell Forces');
+
+legend('Fx', 'Fy', 'Fz');
+grid on;
+
+%% Plot Torques
+figure;
+
+plot(t, Tx, 'LineWidth', 1.5);
+hold on;
+plot(t, Ty, 'LineWidth', 1.5);
+plot(t, Tz, 'LineWidth', 1.5);
+
+xlabel('Time (s)');
+ylabel('Torque (Nm)');
+title('Load Cell Torques');
+
+legend('Tx', 'Ty', 'Tz');
+grid on;
