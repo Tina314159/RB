@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import serial
 from scipy.io import savemat
 
+save_path = "../Matlab_dataProcess/loadcell_data0.mat"
+
 ######################## load cell setup ###########################
 ip = "192.168.1.1"
 sensor45 = Sensor(ip)
@@ -82,6 +84,7 @@ while True:
 ser.close()
 
 ###################### save data as .mat ####################
+
 savemat("loadcell_data.mat", {
     "t": t_vals,
     "Fx": fx_vals,
