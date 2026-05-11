@@ -26,14 +26,16 @@ NiFpga_Status status;
 MyRio_Pwm pwmA0;
 uint8_t selectReg;
 
-static double targetrpm;
-static double incrementrpm;
+static double targetpow;
+static double incrementpow;
 static double incrementtime;
 static double pitchoff;
 static double pitchamp;
 static int Neutral; //neutral position PWM width
 static int Max; //PWM counter for defining frequency
 static double width_increment;
+static double bti_s; //BTI in seconds
+static double Km; //motor constant in Nm/A
 
 struct biquad{ //structure that contains elements of 1 biquad section
 	double b0; double b1; double b2; //numerator
@@ -111,12 +113,12 @@ int main(int argc, char **argv){
     Neutral = 7500;
     Max = 17857;
 
-    printf("Enter the target rpm: ");
-    scanf("%lf", &targetrpm); //will step rpm up from zero to targetrpm by user specified amount and time
-    printf("Enter speed increment amount in rpm: ");
-    scanf("%lf", &incrementrpm); //after a certain amount of time, increment ref_speed by this amount
+    printf("Enter the target power in Watts: ");
+    scanf("%lf", &targetpow); //will step power up from zero to targetpow by user specified amount and time
+    printf("Enter power increment amount in Watts: ");
+    scanf("%lf", &incrementpow); //after a certain amount of time, increment ref_power by this amount
     printf("Enter increment time in s: ");
-    scanf("%lf", &incrementtime); //amount of time between ref_speed increments
+    scanf("%lf", &incrementtime); //amount of time between ref_power increments
     printf("Enter pitch offset in percent: ");
     scanf("%lf", &pitchoff);
     pitchoff = pitchoff/100;
@@ -128,12 +130,12 @@ int main(int argc, char **argv){
     /* initialize table editor values */
     char *Table_Title = "Velocity Controller"; //table name
     table my_table[] = {
-    		{"V_R: rpm ", 0, 0.000},
-    		{"V_J: rpm   ", 0, 0.000},
+    		{"Ref_Power: W ", 0, 0.000},
+    		{"Act_Power: W ", 0, 0.000},
     		{"VDAout: mV ", 0, 0.000},
-    		{"Kp: V-s/r ", 1, 0.040},
-    		{"Ki: V/r ", 1, 0.800},
-    		{"BTI: ms ", 0, 5.000},
+    		{"Kp: V-s/r ", 1, 0.000},
+    		{"Ki: V/r ", 1, 0.000},
+    		{"Vel: rpm ", 0, 0.000},
     		{"Duty %: ", 0, 0.00},
     		{"Pos: rev ", 0, 0.000},
     		{"Start: ", 1, 0.000}
@@ -184,31 +186,32 @@ void *Timer_Irq_Thread(void *resource){
 	extern NiFpga_Session myrio_session;
 	/* cast input arguments */
 	ThreadResource* threadResource = (ThreadResource*) resource;
-	double *Omega_R = &((threadResource->a_table+0)->value); //reference velocity (edit)
-	double *Omega_J = &((threadResource->a_table+1)->value); //actual velocity (show)
+	double *ref_pow = &((threadResource->a_table+0)->value); //
+	double *act_pow = &((threadResource->a_table+1)->value); //)
 	double *VDAout = &((threadResource->a_table+2)->value); //output voltage (show)
 	double *Kp = &((threadResource->a_table+3)->value); //Kp-value (edit)
 	double *Ki = &((threadResource->a_table+4)->value); //Ki-value (edit)
-	double *bti = &((threadResource->a_table+5)->value); //BTI-value (edit)
+	double *speed = &((threadResource->a_table+5)->value); //
 	double *duty = &((threadResource->a_table+6)->value); // PWM duty cycle
 	double *rev = &((threadResource->a_table+7)->value); //position in rev
 	double *S = &((threadResource->a_table+8)->value); //0=stop, 1=start
 
 	int system_ns = 1; //number of sections
-	double err; //error signal = speed ref - speed actual
-	double bti_s; //BTI in seconds
-	bti_s = *bti/1000; //BTI in seconds
+	double err; //error signal = power ref - power actual
+	bti_s = 0.005; //BTI in seconds
+	Km = 0.00583; //motor constant in Nm/A
+	double VADin; //voltage from current monitor pin on amplifer in Volts
 
-	double w_J; //actual velocity in rad/s
-	double w_R; //reference velocity in rad/s
+	double speed_rad; //actual velocity in rad/s
 	double V; //PI output voltage in Volts
 
 	double p; //position in BDI
 	p=0;
 	double e;
 	e = 0.05; //position error in rev
+	double velo; //velocity in BDI/BTI
 
-	int time_len; //number of cycles/interrupts between each rpm increment
+	int time_len; //number of cycles/interrupts between each power increment
 	time_len = (int) incrementtime/ bti_s;
 	int time_count; //count for number of interrupts between each increment
 	time_count = 0;
@@ -276,48 +279,52 @@ void *Timer_Irq_Thread(void *resource){
 		uint32_t irqAssert = 0;
 		Irq_Wait(threadResource->irqContext, TIMERIRQNO, &irqAssert, (NiFpga_Bool*) &(threadResource->irqThreadRdy));
 		/* schedule next interrupt */
-		NiFpga_WriteU32(myrio_session, IRQTIMERWRITE, *bti*1000); //time in microseconds
+		NiFpga_WriteU32(myrio_session, IRQTIMERWRITE, bti_s*1000000); //time in microseconds
 		NiFpga_WriteBool(myrio_session, IRQTIMERSETTIME, NiFpga_True);
 
 		/* service interrupt */
 		if(irqAssert){ //if IRQ has been asserted (non-zero)
 			/* calculate speed and check if it is too fast */
-			*Omega_J = (1000*60/(*bti*1425.1))*vel(); //measure velocity in rpm
-			w_J = *Omega_J*(2*M_PI/60); //measured velocity in rad/s
-			if (*Omega_J > 200) {
+			velo = vel();
+			*speed = (60/(bti_s*1425.1))*velo; //measure velocity in rpm
+			speed_rad = (*speed)*(2*M_PI/60); //measured velocity in rad/s
+			if (*speed > 200) {
 				*S = 2;
 			}
 
-			/* Increment/decrement ref_speed */
-			if (*S==0 || *S == 2){ //decrement ref_speed to make controller turn off motor
-				if (*Omega_R > 0.1){
-					*Omega_R = *Omega_R - 0.1; //decrement ref_speed by 0.02 during each BTI
+			/* Record voltage from amplifier and find power */
+			VADin = Aio_Read(&AIC0); //record voltage from amplifier in Volts
+			*act_pow = 8.1*Km*VADin*speed_rad; //present power in Watts
+
+			/* Increment/decrement ref_pow */
+			if (*S==0 || *S==2){ //decrement ref_power to make controller turn off motor
+				if (*ref_pow > 0.01){
+					*ref_pow = *ref_pow - 0.01; //decrement ref_power by 0.02 during each BTI
 				}
-				else if (*Omega_R <= 0.1){
-					*Omega_R = 0; //do not want speed to become negative
+				else if (*ref_pow <= 0.01){
+					*ref_pow = 0; //do not want power to go into amplifier
 				}
 				control_pulse = 0; //reset control pulse
 				Dio_WriteBit(&dataPulse, NiFpga_False); //reset control pulse
 				width = (int) Neutral + width_increment; //set pitch to steepest to reduce air-resistance in slowing
 			}
-			else if (*S==1){ //increment ref_speed to targetrpm specified by user
+			else if (*S==1){ //increment ref_pow to targetpow specified by user
 				if (control_pulse == 0){ //send pulse to load cell to sync data
 					Dio_WriteBit(&dataPulse, NiFpga_True);
 					control_pulse = 1;
 				}
 				time_count++;
-				if (time_count==time_len && *Omega_R != targetrpm){ //at each time increment when ref_speed is not targetspeed
-					if (*Omega_R < targetrpm-incrementrpm){
-						/*when ref_speed is less than targetrpm and the next time incrementing ref_speed does not exceed targetrpm */
-						*Omega_R = *Omega_R + incrementrpm;
+				if (time_count==time_len && *ref_pow != targetpow){ //at each time increment when ref_pow is not targetpow
+					if (*ref_pow < targetpow-incrementpow){
+						/*when ref_pow is less than targetpow and the next time incrementing ref_pow does not exceed targetpow */
+						*ref_pow = *ref_pow + incrementpow;
 					}
-					else if (*Omega_R < targetrpm){ //if difference between ref_speed and targetrpm is less than increment amount
-						*Omega_R = targetrpm;
+					else if (*ref_pow < targetpow){ //if difference between ref_pow and targetpow is less than increment amount
+						*ref_pow = targetpow;
 					}
 					time_count = 0;
 				}
 			}
-			w_R = *Omega_R*(2*M_PI/60); //reference velocity in rad/s
 
 			/* Check position of wing and move servo to position */
 			p = pos(); //position in BDI
@@ -348,15 +355,14 @@ void *Timer_Irq_Thread(void *resource){
 			/* Implement controller to change actual velocity */
 			system->b0 = (*Kp)+0.5*(*Ki)*(bti_s); //recalculate b0
 			system->b1 = -(*Kp)+0.5*(*Ki)*(bti_s); //recalculate b1
-			err = w_R - w_J; //current error in rad/s
+			err = *ref_pow - *act_pow; //current error in rad/s
 			V = cascade(err, system, system_ns, -10, 10); //find output voltage from PI in Volts
 			*VDAout = V*1000; //output voltage from PI in mV
 			Aio_Write(&AOC0, V); //send output value to AOC0/motor
 
-			Vin = Aio_Read(&AIC0); //record voltage from amplifier in Volts
-			Ain = Vin*8.1; //current going to motor in Amps
 
-			/* Store values for export */
+
+			/* Store values for export
 			if (*Omega_R != targetrpm && *S==1){ //transient response
 				if (bp_qrev_trans<qrev_trans+IMAX) *bp_qrev_trans++ = *rev;
 				if (bp_wrpm_trans<wrpm_trans+IMAX) *bp_wrpm_trans++ = *Omega_J;
@@ -383,7 +389,7 @@ void *Timer_Irq_Thread(void *resource){
 					if (bp_kp_ss<kp_ss+IMAX) *bp_kp_ss++ = *Kp;
 					if (bp_ki_ss<ki_ss+IMAX) *bp_ki_ss++ = *Ki;
 				}
-			}
+			} */
 			Irq_Acknowledge(irqAssert); //acknowledge interrupt
 		}
 	}
@@ -395,9 +401,9 @@ void *Timer_Irq_Thread(void *resource){
 	//Saving to MATLAB
 	/*MATFILE *mf; //the file where the buffer for speed will be written onto
 	int error = 0;
-	mf = openmatfile("Bird_Velocity_Control.mat", &error);
+	mf = openmatfile("Bird_Power_Control.mat", &error);
 	if(!mf) printf("Can't open mat file %d\n", error);
-	matfile_addstring(mf, "date", "6:20");
+	matfile_addstring(mf, "date", "power");
 	matfile_addmatrix(mf, "BTI", &bti_s, 1, 1, 0); //in seconds
 	matfile_addmatrix(mf, "targetvel", &targetrpm, 1, 1, 0); //in rpm
 	matfile_addmatrix(mf, "incrementvel", &incrementrpm, 1, 1, 0); //in rpm
@@ -417,8 +423,8 @@ void *Timer_Irq_Thread(void *resource){
 	matfile_addmatrix(mf, "kp_ss", kp_ss, IMAX, 1, 0);
 	matfile_addmatrix(mf, "ki_trans", ki_trans, IMAX, 1, 0);
 	matfile_addmatrix(mf, "ki_ss", ki_ss, IMAX, 1, 0);
-	matfile_close(mf);
-*/
+	matfile_close(mf); */
+
 	pthread_exit(NULL); //terminate new thread
 	return NULL;
 }
