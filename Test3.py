@@ -2,6 +2,7 @@ from NetFT import Sensor         # pip install NetFT
 import time
 import matplotlib.pyplot as plt
 import serial
+from scipy.io import savemat
 
 ######################## load cell setup ###########################
 ip = "192.168.1.1"
@@ -79,6 +80,18 @@ while True:
         t_vals, fx_vals, fy_vals, fz_vals, tx_vals, ty_vals, tz_vals = collect_data()
         break
 ser.close()
+
+###################### save data as .mat ####################
+savemat("loadcell_data.mat", {
+    "t": t_vals,
+    "Fx": fx_vals,
+    "Fy": fy_vals,
+    "Fz": fz_vals,
+    "Tx": tx_vals,
+    "Ty": ty_vals,
+    "Tz": tz_vals,
+    "sample_rate": sample_rate
+})
 
 ######################## plotting ###########################
 plt.figure(figsize=(10, 8))
