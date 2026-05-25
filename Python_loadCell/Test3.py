@@ -7,6 +7,8 @@ from scipy.io import savemat
 save_path = "../Matlab_dataProcess/loadcell_data0.mat"
 
 ######################## load cell setup ###########################
+print("Start Setup...")
+
 ip = "192.168.1.1"
 sensor45 = Sensor(ip)
 sensor45.tare(100)   # average 100 samples
