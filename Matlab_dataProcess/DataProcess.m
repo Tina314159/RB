@@ -1,15 +1,15 @@
 %% Plot data from load cell and myRio
 clear;
 clc;
-
+% lengthen BTI or find better encoder. 
 %% Load load cell data
-LC_data = load("loadcell_data.mat");
+LC_data = load("loadcell_data_10deg_30rpm.mat");
 
 % Extract variables 
 t  = LC_data.t;
 
 Fx = LC_data.Fx;
-Fy = LC_data.Fy;
+Fy =-1 * LC_data.Fy;
 Fz = LC_data.Fz;
 
 Tx = LC_data.Tx;
@@ -18,7 +18,7 @@ Tz = LC_data.Tz;
 
 %% load myRio Data
 
-mR_data = load("Bird_Velocity_Control.mat");
+mR_data = load("Bird_Velocity_Control_30rpm_10deg.mat");
 
 % Extract variables
 
@@ -46,6 +46,24 @@ Amp_ss  = mR_data.Amp_ss;
 kp_ss   = mR_data.kp_ss;
 ki_ss   = mR_data.ki_ss;
 
+%% filter data
+% Filter parameters
+Fs = 1 / BTI;     % sampling frequency (Hz)
+Fc = 1;          % cutoff frequency (Hz)
+N  = 2;           % 2nd-order Butterworth
+% Normalize cutoff frequency
+Wn = Fc / (Fs/2);
+% Design filter
+[b, a] = butter(N, Wn, 'low');
+% Apply filter
+
+wrpm_trans_filt = filter(b, a, wrpm_trans);
+wrpm_ss_filt = filter(b, a, wrpm_ss);
+combined_w_filt = filter(b,a, [wrpm_trans.', wrpm_ss.']);
+amp_trans_filt = filter(b, a, Amp_trans);
+amp_ss_filt = filter(b, a, Amp_ss);
+
+
 %% Create time vectors
 t_trans = (0:length(wrpm_trans)-1) * BTI;
 t_ss    = (0:length(wrpm_ss)-1) * BTI;
@@ -54,7 +72,8 @@ t_ss    = (0:length(wrpm_ss)-1) * BTI;
 figure;
 
 plot(t_trans, wrpm_trans, 'LineWidth', 1.5);
-
+hold on
+plot(t_trans,  wrpm_trans_filt, 'LineWidth', 1.5)
 xlabel('Time (s)');
 ylabel('Velocity (RPM)');
 title('Transient Velocity Response');
@@ -65,11 +84,26 @@ grid on;
 figure;
 
 plot(t_ss, wrpm_ss, 'LineWidth', 1.5);
-
+hold on
+plot(t_ss, wrpm_ss_filt, 'LineWidth', 1.5);
 xlabel('Time (s)');
 ylabel('Velocity (RPM)');
 title('Steady-State Velocity');
 
+grid on;
+
+%% plot transient and steady state velocity on same plot
+figure;
+
+plot(t_trans, wrpm_trans, 'LineWidth', 1.5,'Color','#FFA500');
+hold on;
+plot(t_ss + t_trans(end), wrpm_ss, 'LineWidth', 1.5,'Color','red');
+plot([t_trans, t_ss + t_trans(end)], combined_w_filt,'LineWidth', 1.5,'Color','black');
+
+xlabel('Time (s)');
+ylabel('Velocity (RPM)');
+title('Velocity vs Time');
+legend('Trasnient data', 'Steady State data', 'Filtered');
 grid on;
 
 %% Plot controller output voltage
@@ -77,7 +111,7 @@ figure;
 
 plot(t_trans, Va_trans, 'LineWidth', 1.5);
 hold on;
-plot(t_ss + t_trans(end), Va_ss, 'LineWidth', 1.5);
+plot(t_ss + t_trans(end) + 5, Va_ss, 'LineWidth', 1.5);
 
 xlabel('Time (s)');
 ylabel('Controller Output Voltage (V)');
@@ -92,18 +126,19 @@ figure;
 
 plot(t_trans, Amp_trans, 'LineWidth', 1.5);
 hold on;
-plot(t_ss + t_trans(end), Amp_ss, 'LineWidth', 1.5);
+plot(t_trans, amp_trans_filt, 'LineWidth', 1.5);
+plot(t_ss + t_trans(end)+5, Amp_ss, 'LineWidth', 1.5);
+plot(t_ss + t_trans(end)+5, amp_ss_filt, 'LineWidth', 1.5);
 
 xlabel('Time (s)');
 ylabel('Motor Current (A)');
 title('Motor Current');
 
-legend('Transient', 'Steady-State');
+legend('Transient','Trans filtered' ,'steady ','Steady filtered');
 
 grid on;
 
 %% Plot wing position
-
 figure;
 
 plot(t_trans, qrev_trans, 'LineWidth', 1.5);
@@ -119,7 +154,6 @@ legend('Transient', 'Steady-State');
 grid on;
 
 %% Plot controller gains
-
 figure;
 
 plot(t_trans, kp_trans, 'LineWidth', 1.5);
@@ -135,7 +169,6 @@ legend('Kp', 'Ki');
 grid on;
 
 %% Display experiment info
-
 fprintf('Target Velocity      : %.2f RPM\n', targetvel);
 fprintf('Velocity Increment   : %.2f RPM\n', incrementvel);
 fprintf('Increment Time       : %.2f s\n', incrementtime);
@@ -146,16 +179,34 @@ fprintf('BTI                  : %.4f s\n', BTI);
 %% Plot Forces
 figure;
 
-plot(t, Fx, 'LineWidth', 1.5);
-hold on;
 plot(t, Fy, 'LineWidth', 1.5);
-plot(t, Fz, 'LineWidth', 1.5);
-
+hold on;
+%plot(t, Fx, 'LineWidth', 1.5);
+%plot(t, Fz, 'LineWidth', 1.5);
+%plot(t_trans, qrev_trans, 'LineWidth', 1.5);
 xlabel('Time (s)');
 ylabel('Force (N)');
 title('Load Cell Forces');
 
-legend('Fx', 'Fy', 'Fz');
+legend('Fy', 'Fx', 'Fz');
+grid on;
+
+%% plot y momentum
+% Integrate Fy over time
+Fy_int = cumtrapz(t, Fy);
+
+figure;
+
+plot(t, Fy, 'LineWidth', 1.5);
+hold on;
+% Plot integrated Fy
+plot(t, Fy_int, 'LineWidth', 1.5);
+
+xlabel('Time (s)');
+ylabel('Force / Impulse');
+title('Load Cell Forces');
+
+legend('Fy', '\Delta y momentum');
 grid on;
 
 %% Plot Torques
