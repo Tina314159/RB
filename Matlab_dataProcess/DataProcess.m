@@ -181,8 +181,8 @@ figure;
 
 plot(t, Fy, 'LineWidth', 1.5);
 hold on;
-%plot(t, Fx, 'LineWidth', 1.5);
-%plot(t, Fz, 'LineWidth', 1.5);
+plot(t, Fx, 'LineWidth', 1.5);
+plot(t, Fz, 'LineWidth', 1.5);
 %plot(t_trans, qrev_trans, 'LineWidth', 1.5);
 xlabel('Time (s)');
 ylabel('Force (N)');
