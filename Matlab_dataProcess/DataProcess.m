@@ -4,7 +4,7 @@ clear;
 clc;
 % lengthen BTI or find better encoder. 
 %% Load load cell data
-LC_data = load("loadcell_data_60rpm_30deg.mat");
+LC_data = load("loadcell_data_60rpm_30deg_0off.mat");
 
 % Extract variables 
 t  = LC_data.t;
@@ -204,10 +204,46 @@ hold on;
 plot(t, Fy_int, 'LineWidth', 1.5);
 
 xlabel('Time (s)');
-ylabel('Force / Impulse');
-title('Load Cell Forces');
+ylabel('Force / Impulse (N)/(Ns)');
+title('Load Cell Forces (y)');
 
 legend('Fy', '\Delta y momentum');
+grid on;
+
+%% plot x momentum
+% Integrate Fy over time
+Fx_int = cumtrapz(t, Fx);
+
+figure;
+
+plot(t, Fx, 'LineWidth', 1.5);
+hold on;
+% Plot integrated Fy
+plot(t, Fx_int, 'LineWidth', 1.5);
+
+xlabel('Time (s)');
+ylabel('Force / Impulse (N)/(Ns)');
+title('Load Cell Forces (x)');
+
+legend('Fx', '\Delta x momentum');
+grid on;
+
+%% plot z momentum
+% Integrate Fy over time
+Fz_int = cumtrapz(t, Fz);
+
+figure;
+
+plot(t, Fz, 'LineWidth', 1.5);
+hold on;
+% Plot integrated Fy
+plot(t, Fz_int, 'LineWidth', 1.5);
+
+xlabel('Time (s)');
+ylabel('Force / Impulse (N)/(Ns)');
+title('Load Cell Forces (z)');
+
+legend('Fz', '\Delta z momentum');
 grid on;
 
 %% Plot Torques
