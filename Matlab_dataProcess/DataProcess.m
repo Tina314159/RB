@@ -4,7 +4,7 @@ clear;
 clc;
 % lengthen BTI or find better encoder. 
 %% Load load cell data
-LC_data = load("loadcell_data_60rpm_30deg_0off.mat");
+LC_data = load("loadcell_data_60rpm_30deg.mat");
 
 % Extract variables 
 t  = LC_data.t;
@@ -72,13 +72,13 @@ t_ss    = (0:length(wrpm_ss)-1) * BTI;
 %% Plot transient velocity
 figure;
 
-plot(t_trans, wrpm_trans, 'LineWidth', 1.5);
+plot(t_trans, wrpm_trans, 'LineWidth', 1.5,'Color','#FFA500');
 hold on
-plot(t_trans,  wrpm_trans_filt, 'LineWidth', 1.5)
+plot(t_trans,  wrpm_trans_filt, 'LineWidth', 1.5,'Color','black')
 xlabel('Time (s)');
 ylabel('Velocity (RPM)');
 title('Transient Velocity Response');
-
+legend('raw data','filtered')
 grid on;
 
 %% Plot steady-state velocity
