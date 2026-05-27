@@ -4,7 +4,7 @@ clear;
 clc;
 % lengthen BTI or find better encoder. 
 %% Load load cell data
-LC_data = load("loadcell_data_10deg_30rpm.mat");
+LC_data = load("loadcell_data_60rpm_30deg_0off.mat");
 
 % Extract variables 
 t  = LC_data.t;
@@ -19,7 +19,7 @@ Tz = LC_data.Tz;
 
 %% load myRio Data
 
-mR_data = load("Bird_Velocity_Control_30rpm_10deg.mat");
+mR_data = load("test_60rpm_30deg_0off.mat");
 
 % Extract variables
 
