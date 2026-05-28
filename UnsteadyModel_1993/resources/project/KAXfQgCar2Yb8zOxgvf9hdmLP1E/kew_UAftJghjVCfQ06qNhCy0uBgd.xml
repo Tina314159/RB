@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Info File="StartUp3_control.m" GroupUUID="default" Icon="" Name="StartUp3_control" Type="StartUp" Visible="0">
+    <Extension Name="StartUpPrev" Value="9a7122ad-eeb4-4bae-a004-01062ac80132"/>
+</Info>
