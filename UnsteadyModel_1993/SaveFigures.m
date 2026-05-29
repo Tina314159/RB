@@ -1,7 +1,7 @@
 %% Export ALL open figures into one PDF
 
 %% pdf deletion
-pdfName = 'AR_definition.png';
+pdfName = 'Visuals/Iteration_60rpm_40deg.png';
 
 % delete old PDF first
 if exist(pdfName,'file')
