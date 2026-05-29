@@ -19,8 +19,8 @@ mu = 1.81e-5; % at room temp (Pa*s)
 % which is limited by servo max speed. A = V/w
 maxV_servo = 60/0.032;                          % deg/s
 pitch_amp  = (deg2rad(maxV_servo))/ang_freq;   % Pitch def sine max amplitude (rad)
-pitch_lim  = deg2rad(30);                      % pitch amplitude  
-pitch_mean = deg2rad(20);                      % Mean pitch angle (radians)
+pitch_lim  = deg2rad(40);                      % pitch amplitude  
+pitch_mean = deg2rad(40);                      % Mean pitch angle (radians)
 pitch_pha = 0.3;                              % pitch phase shift (decimal percent)
 % pitch_a mean value assumed to be zero. not added to equations
 
