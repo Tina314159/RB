@@ -6,3 +6,5 @@
     - use .mlx file for animation & symbolic eqn
     - use .m file for iteration
 - code for unsteady aero model (matlab project)
+    - run .prj to start
+    - modify startup.m for wing configuration 
