@@ -2,9 +2,17 @@
 %% Plot data from load cell and myRio
 clear;
 clc;
+clf;
+close all;
 % lengthen BTI or find better encoder. 
+%% Load data and assign names
+pdfName = 'leaf_60rpm_40IP_40deg.pdf';
+LC_File = "LC_60rpm_40IP_30deg_maxWindv1.mat";
+mR_File = "Leaf_60rpm_40IP_30deg.mat";
+LC_data = load(LC_File);
+mR_data = load(mR_File);
+
 %% Load load cell data
-LC_data = load("loadcell_data_60rpm_30deg_0off.mat");
 
 % Extract variables 
 t  = LC_data.t;
@@ -17,9 +25,17 @@ Tx = LC_data.Tx;
 Ty = LC_data.Ty;
 Tz = LC_data.Tz;
 
+%% optional data re-zero
+% Optional re-zeroing of load cell data
+% Fx = Fx - mean(Fx(1:300));
+% Fy = Fy - mean(Fy(1:300));
+% Fz = Fz - mean(Fz(1:300));
+% Tx = Tx - mean(Tx(1:300));
+% Ty = Ty - mean(Ty(1:300));
+% Tz = Tz - mean(Tz(1:300));
+
 %% load myRio Data
 
-mR_data = load("test_60rpm_30deg_0off.mat");
 
 % Extract variables
 
@@ -34,7 +50,7 @@ pitchamp       = mR_data.pitchamp;
 % Transient data
 qrev_trans = mR_data.qrev_trans;
 wrpm_trans = mR_data.wrpm_trans;
-Va_trans   = mR_data.Va_trans;
+Va_trans   = -1 * mR_data.Va_trans;
 Amp_trans  = mR_data.Amp_trans;
 kp_trans   = mR_data.kp_trans;
 ki_trans   = mR_data.ki_trans;
@@ -42,7 +58,7 @@ ki_trans   = mR_data.ki_trans;
 % Steady-state data
 qrev_ss = mR_data.qrev_ss;
 wrpm_ss = mR_data.wrpm_ss;
-Va_ss   = mR_data.Va_ss;
+Va_ss   = -1 * mR_data.Va_ss;
 Amp_ss  = mR_data.Amp_ss;
 kp_ss   = mR_data.kp_ss;
 ki_ss   = mR_data.ki_ss;
@@ -69,29 +85,58 @@ amp_ss_filt = filter(b, a, Amp_ss);
 t_trans = (0:length(wrpm_trans)-1) * BTI;
 t_ss    = (0:length(wrpm_ss)-1) * BTI;
 
-%% Plot transient velocity
-figure;
+%% info
+fig_info = figure('Color','w');
+axis off
 
-plot(t_trans, wrpm_trans, 'LineWidth', 1.5,'Color','#FFA500');
-hold on
-plot(t_trans,  wrpm_trans_filt, 'LineWidth', 1.5,'Color','black')
-xlabel('Time (s)');
-ylabel('Velocity (RPM)');
-title('Transient Velocity Response');
-legend('raw data','filtered')
-grid on;
+infoText = sprintf([ ...
+    'Experiment Parameters\n\n' ...
+    'Target Velocity      : %.2f RPM\n' ...
+    'Velocity Increment   : %.2f RPM\n' ...
+    'Increment Time       : %.2f s\n' ...
+    'Pitch Offset         : %.3f\n' ...
+    'Pitch Amplitude      : %.2f deg\n' ...
+    'BTI                  : %.4f s\n' ...
+    'KP                   : %.4f\n' ...
+    'KI                   : %.4f\n\n' ...
+    'Additional Comment: High wind, spreaded, no mR file...lost \n\n' ...
+    'LC file              : %s \n' ...
+    'mR file              : %s \n'], ...
+    targetvel, incrementvel, incrementtime, ...
+    pitchoff, pitchamp, BTI, kp_ss(1), ki_ss(1),LC_File,mR_File);
+
+text(0.05,0.95,infoText, ...
+    'Units','normalized', ...
+    'VerticalAlignment','top', ...
+    'FontName','Courier New', ...
+    'FontSize',12, ...
+    'Interpreter','none');
+
+title('Experiment Summary');
+
+%% Plot transient velocity
+% figure;
+% 
+% plot(t_trans, wrpm_trans, 'LineWidth', 1.5,'Color','#FFA500');
+% hold on
+% plot(t_trans,  wrpm_trans_filt, 'LineWidth', 1.5,'Color','black')
+% xlabel('Time (s)');
+% ylabel('Velocity (RPM)');
+% title('Transient Velocity Response');
+% legend('raw data','filtered')
+% grid on;
 
 %% Plot steady-state velocity
-figure;
-
-plot(t_ss, wrpm_ss, 'LineWidth', 1.5);
-hold on
-plot(t_ss, wrpm_ss_filt, 'LineWidth', 1.5);
-xlabel('Time (s)');
-ylabel('Velocity (RPM)');
-title('Steady-State Velocity');
-
-grid on;
+% figure;
+% 
+% plot(t_ss, wrpm_ss, 'LineWidth', 1.5);
+% hold on
+% plot(t_ss, wrpm_ss_filt, 'LineWidth', 1.5);
+% xlabel('Time (s)');
+% ylabel('Velocity (RPM)');
+% title('Steady-State Velocity');
+% 
+% grid on;
 
 %% plot transient and steady state velocity on same plot
 figure;
@@ -107,9 +152,13 @@ title('Velocity vs Time');
 legend('Trasnient data', 'Steady State data', 'Filtered');
 grid on;
 
-%% Plot controller output voltage
-figure;
 
+%% Plot Controller Voltage and Motor Current
+fig_elec = figure;
+tiledlayout(2,1);
+
+% Controller Output Voltage
+nexttile;
 plot(t_trans, Va_trans, 'LineWidth', 1.5);
 hold on;
 plot(t_ss + t_trans(end) + 5, Va_ss, 'LineWidth', 1.5);
@@ -119,55 +168,53 @@ ylabel('Controller Output Voltage (V)');
 title('Controller Output Voltage');
 
 legend('Transient', 'Steady-State');
-
 grid on;
 
-%% Plot motor current
-figure;
-
+% Motor Current
+nexttile;
 plot(t_trans, Amp_trans, 'LineWidth', 1.5);
 hold on;
 plot(t_trans, amp_trans_filt, 'LineWidth', 1.5);
-plot(t_ss + t_trans(end)+5, Amp_ss, 'LineWidth', 1.5);
-plot(t_ss + t_trans(end)+5, amp_ss_filt, 'LineWidth', 1.5);
+plot(t_ss + t_trans(end) + 5, Amp_ss, 'LineWidth', 1.5);
+plot(t_ss + t_trans(end) + 5, amp_ss_filt, 'LineWidth', 1.5);
 
 xlabel('Time (s)');
 ylabel('Motor Current (A)');
 title('Motor Current');
 
-legend('Transient','Trans filtered' ,'steady ','Steady filtered');
-
+legend('Transient', 'Trans filtered', 'Steady', 'Steady filtered');
 grid on;
 
 %% Plot wing position
-figure;
+% fig_pos = figure;
+% 
+% plot(t_trans, qrev_trans, 'LineWidth', 1.5);
+% hold on;
+% plot(t_ss + t_trans(end), qrev_ss, 'LineWidth', 1.5);
+% 
+% xlabel('Time (s)');
+% ylabel('Wing Position (rev)');
+% title('Wing Position');
+% 
+% legend('Transient', 'Steady-State');
+% 
+% grid on;
 
-plot(t_trans, qrev_trans, 'LineWidth', 1.5);
-hold on;
-plot(t_ss + t_trans(end), qrev_ss, 'LineWidth', 1.5);
-
-xlabel('Time (s)');
-ylabel('Wing Position (rev)');
-title('Wing Position');
-
-legend('Transient', 'Steady-State');
-
-grid on;
 
 %% Plot controller gains
-figure;
-
-plot(t_trans, kp_trans, 'LineWidth', 1.5);
-hold on;
-plot(t_trans, ki_trans, 'LineWidth', 1.5);
-
-xlabel('Time (s)');
-ylabel('Gain Value');
-title('Controller Gains During Transient');
-
-legend('Kp', 'Ki');
-
-grid on;
+% figure;
+% 
+% plot(t_trans, kp_trans, 'LineWidth', 1.5);
+% hold on;
+% plot(t_trans, ki_trans, 'LineWidth', 1.5);
+% 
+% xlabel('Time (s)');
+% ylabel('Gain Value');
+% title('Controller Gains During Transient');
+% 
+% legend('Kp', 'Ki');
+% 
+% grid on;
 
 %% Display experiment info
 fprintf('Target Velocity      : %.2f RPM\n', targetvel);
@@ -176,27 +223,61 @@ fprintf('Increment Time       : %.2f s\n', incrementtime);
 fprintf('Pitch Offset         : %.3f\n', pitchoff);
 fprintf('Pitch Amplitude      : %.2f deg\n', pitchamp);
 fprintf('BTI                  : %.4f s\n', BTI);
+fprintf('KP                   : %.4f \n', kp_ss(1));
+fprintf('KI                   : %.4f \n', ki_ss(1));
+
 
 %% Plot Forces
-figure;
+fig_F = figure;
+tiledlayout(5,1);
 
-plot(t, Fy, 'LineWidth', 1.5);
-hold on;
+% Full time range
+fig_F_ax1 = nexttile([2 1]);
 plot(t, Fx, 'LineWidth', 1.5);
+hold on;
+plot(t, Fy, 'LineWidth', 1.5);
 plot(t, Fz, 'LineWidth', 1.5);
-%plot(t_trans, qrev_trans, 'LineWidth', 1.5);
+
 xlabel('Time (s)');
 ylabel('Force (N)');
-title('Load Cell Forces');
-
-legend('Fy', 'Fx', 'Fz');
+title('Load Cell Forces - Full Range');
+legend('Fx', 'Fy', 'Fz');
 grid on;
+
+% Zoomed time range
+fig_F_ax2 = nexttile([2 1]);
+plot(t, Fx, 'LineWidth', 1.5);
+hold on;
+plot(t, Fy, 'LineWidth', 1.5);
+plot(t, Fz, 'LineWidth', 1.5);
+%plot([t_trans (t_ss + t_trans(end))],[qrev_trans;qrev_ss ], 'LineWidth', 1.5,'Color','#DFFF00')
+
+xlabel('Time (s)');
+ylabel('Force (N)');
+title('Load Cell Forces - Zoomed');
+legend('Fx', 'Fy', 'Fz');
+grid on;
+
+% Position
+fig_F_ax3 = nexttile;
+
+plot([t_trans (t_ss + t_trans(end))], [qrev_trans; qrev_ss],'LineWidth', 1.5);
+xlabel('Time (s)');
+ylabel('Position (rev)');
+title('Wing Position');
+ylim([0 1]);
+grid on;
+
+% Apply zoom window
+timeWindow = input('Enter the time window for zoomed-in plot (e.g., [start end]): ');
+xlim(fig_F_ax2, timeWindow);
+xlim(fig_F_ax3, timeWindow);
 
 %% plot y momentum
 % Integrate Fy over time
 Fy_int = cumtrapz(t, Fy);
 
-figure;
+fig_Fy = figure;
 
 plot(t, Fy, 'LineWidth', 1.5);
 hold on;
@@ -214,7 +295,7 @@ grid on;
 % Integrate Fy over time
 Fx_int = cumtrapz(t, Fx);
 
-figure;
+fig_Fx = figure;
 
 plot(t, Fx, 'LineWidth', 1.5);
 hold on;
@@ -232,7 +313,7 @@ grid on;
 % Integrate Fy over time
 Fz_int = cumtrapz(t, Fz);
 
-figure;
+fig_Fz = figure;
 
 plot(t, Fz, 'LineWidth', 1.5);
 hold on;
@@ -247,8 +328,12 @@ legend('Fz', '\Delta z momentum');
 grid on;
 
 %% Plot Torques
-figure;
 
+fig_T = figure;
+tiledlayout(2,1);
+
+% Full time range
+fig_T_ax1 = nexttile;
 plot(t, Tx, 'LineWidth', 1.5);
 hold on;
 plot(t, Ty, 'LineWidth', 1.5);
@@ -256,7 +341,26 @@ plot(t, Tz, 'LineWidth', 1.5);
 
 xlabel('Time (s)');
 ylabel('Torque (Nm)');
-title('Load Cell Torques');
-
-legend('Tx', 'Ty', 'Tz');
+title('Load Cell Torques - Full Range');
+legend('Tx','Ty','Tz');
 grid on;
+
+% Zoomed time range
+fig_T_ax2 = nexttile;
+plot(t, Tx, 'LineWidth', 1.5);
+hold on;
+plot(t, Ty, 'LineWidth', 1.5);
+plot(t, Tz, 'LineWidth', 1.5);
+
+xlabel('Time (s)');
+ylabel('Torque (Nm)');
+title('Load Cell Torques - Zoomed');
+legend('Tx','Ty','Tz');
+grid on;
+
+% Set different x-axis limits
+timeWindow = input('Enter the time window for zoomed in plot (e.g., [start end]): ');
+xlim(fig_T_ax2,timeWindow);    
+%% save data to pdf
+
+DataSavePDF
