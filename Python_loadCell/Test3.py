@@ -19,8 +19,8 @@ torquePerCount = 1000000 # for mini45
 
 ######################## test/display settings #####################
 printSetting = 1  # 1 = print in terminal, 0 = don't print 
-duration = 50  # seconds
-sample_rate = 50.0  # Hz
+duration = 60  # seconds
+sample_rate = 120.0  # Hz
 
 ######################## data collection function ###########################
 def collect_data():
@@ -39,7 +39,6 @@ def collect_data():
 
             if now >= next_sample_time:
                 current_time = now - start_time
-
                 data = sensor45.getMeasurement()
                 fx, fy, fz, tx, ty, tz = data
 
