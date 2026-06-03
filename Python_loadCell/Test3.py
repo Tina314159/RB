@@ -19,7 +19,7 @@ torquePerCount = 1000000 # for mini45
 
 ######################## test/display settings #####################
 printSetting = 1  # 1 = print in terminal, 0 = don't print 
-duration = 60  # seconds
+duration = 160  # seconds
 sample_rate = 120.0  # Hz
 
 ######################## data collection function ###########################
