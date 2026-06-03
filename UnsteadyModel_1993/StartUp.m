@@ -8,7 +8,7 @@ clear all
 
 %% Define key parameters 
 U = 0.1;                % mean stream velocity (m/s)
-freq = 1;                % flapping frequency (Hz)
+freq = 3;                % flapping frequency (Hz)
 ang_freq = freq*2*pi;    % flapping frequency (rad/s)
 %AR = 5.0;               % Aspect Ratio
 
@@ -25,9 +25,9 @@ mu = 1.81e-5; % at room temp (Pa*s)
 % which is limited by servo max speed. A = V/w
 maxV_servo = 60/0.032;                         % deg/s
 pitch_amp  = (deg2rad(maxV_servo))/ang_freq;   % Pitch def sine max amplitude (rad)
-pitch_lim  = deg2rad(30);                      % pitch amplitude  
+pitch_lim  = deg2rad(1);                      % pitch amplitude  
 pitch_mean = deg2rad(1);                      % Mean pitch angle (radians)
-pitch_pha = 0.80;                              % pitch phase shift (decimal percent)
+pitch_pha = 0.30;                              % pitch phase shift (decimal percent)
 % pitch_a mean value assumed to be zero. not added to equations
 
 numPeriods = 4;            % number periods for time series & plots

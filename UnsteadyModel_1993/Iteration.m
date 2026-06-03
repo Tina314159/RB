@@ -2,7 +2,7 @@
 
 %% key parameters
 U = 0.1;                 % mean stream velocity (m/s)
-freq = 1;                % flapping frequency (Hz)
+freq = 2;                % flapping frequency (Hz)
 ang_freq = freq*2*pi;    % flapping frequency (rad/s)
 %AR = 5.0;               % Aspect Ratio
 
@@ -19,8 +19,8 @@ mu = 1.81e-5; % at room temp (Pa*s)
 % which is limited by servo max speed. A = V/w
 maxV_servo = 60/0.032;                          % deg/s
 pitch_amp  = (deg2rad(maxV_servo))/ang_freq;   % Pitch def sine max amplitude (rad)
-pitch_lim  = deg2rad(40);                      % pitch amplitude  
-pitch_mean = deg2rad(40);                      % Mean pitch angle (radians)
+pitch_lim  = deg2rad(1);                      % pitch amplitude  
+pitch_mean = deg2rad(10);                      % Mean pitch angle (radians)
 pitch_pha = 0.3;                              % pitch phase shift (decimal percent)
 % pitch_a mean value assumed to be zero. not added to equations
 
@@ -122,7 +122,7 @@ InputSetUp;
 maxIterations = 10;
 
 % pitch sweep
-pitch_pha_list = 0.1*(1:maxIterations)-0.1;
+pitch_lim_list = 5*(1:maxIterations)-5;
 
 % columns:
 % 1 pitch_mean_deg
@@ -138,11 +138,11 @@ iteNum = -1;
 
 for iter = 1:maxIterations
     % Update pitch value
-    pitch_pha = pitch_pha_list(iter);
+    pitch_lim = deg2rad(pitch_lim_list(iter));
     InputSetUp;
 
     fprintf('\nstart sim #: %d\n', iter);
-    fprintf('pitch pha = %.2f percent\n',pitch_pha);
+    fprintf('pitch lim = %.2f \n',pitch_lim);
 
     % Run simulation
     simout1 = sim(model);
@@ -227,9 +227,9 @@ for iter = 1:maxIterations
     plot(t_samp, omega1_data);
     hold on;
     plot(t_samp, rad2deg(pitch_data)/10);
-    plot(t_samp, power1_data);
+    %plot(t_samp, power1_data);
     plot(t_samp, tau1_data);
-    legend('Crank Speed','10*Pitch','Power','Torque');
+    legend('Crank Speed','10*Pitch','Torque');
     xlabel('Time [s]');
     ylabel('[rad/s],[deg],[W],[Nm]');
     grid on;
@@ -263,7 +263,7 @@ end
 %% Final printout
 fprintf('\n================ Final Summary Buffer ================\n');
 fprintf('Columns:\n');
-fprintf('1 pitch_pha\n');
+fprintf('1 pitch_lim\n');
 fprintf('2 delX_cycle_momentum\n');
 fprintf('3 delY_cycle_momentum\n');
 fprintf('4 max_torque_amp\n');
