@@ -19,7 +19,7 @@ torquePerCount = 1000000 # for mini45
 
 ######################## test/display settings #####################
 printSetting = 1  # 1 = print in terminal, 0 = don't print 
-duration = 160  # seconds
+duration = 100  # seconds
 sample_rate = 120.0  # Hz
 
 ######################## data collection function ###########################
@@ -86,7 +86,7 @@ ser.close()
 
 ###################### save data as .mat ####################
 
-savemat("loadcell_data.mat", {
+savemat("LC_rpm_IP_OP_OS.mat", {
     "t": t_vals,
     "Fx": fx_vals,
     "Fy": fy_vals,
