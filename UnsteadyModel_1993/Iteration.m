@@ -2,7 +2,7 @@
 
 %% key parameters
 U = 0.1;                 % mean stream velocity (m/s)
-freq = 2;                % flapping frequency (Hz)
+freq = 1;                % flapping frequency (Hz)
 ang_freq = freq*2*pi;    % flapping frequency (rad/s)
 %AR = 5.0;               % Aspect Ratio
 
@@ -20,7 +20,7 @@ mu = 1.81e-5; % at room temp (Pa*s)
 maxV_servo = 60/0.032;                          % deg/s
 pitch_amp  = (deg2rad(maxV_servo))/ang_freq;   % Pitch def sine max amplitude (rad)
 pitch_lim  = deg2rad(1);                      % pitch amplitude  
-pitch_mean = deg2rad(10);                      % Mean pitch angle (radians)
+pitch_mean = deg2rad(0);                      % Mean pitch angle (radians)
 pitch_pha = 0.3;                              % pitch phase shift (decimal percent)
 % pitch_a mean value assumed to be zero. not added to equations
 
@@ -119,10 +119,10 @@ InputSetUp;
 %% Iteration setup
 % initialize result storage
 
-maxIterations = 10;
+maxIterations = 2;
 
 % pitch sweep
-pitch_lim_list = 5*(1:maxIterations)-5;
+pitch_lim_list = [0 30];
 
 % columns:
 % 1 pitch_mean_deg

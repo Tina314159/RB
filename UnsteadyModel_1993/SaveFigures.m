@@ -1,36 +1,36 @@
 %% Export ALL open figures into one PDF
 
 %% pdf deletion
-pdfName = 'Visuals/Iteration_120rpm_varydeg.pdf';
+pdfName = 'Visuals/Iteration_60rpm_0IP_0and30OP_noWind.pdf';
 
 % delete old PDF first
 if exist(pdfName,'file')
     delete(pdfName);
 end
 
-%% folder deletion
-folderName = 'slprj';
-
-if exist(folderName,'dir')
-    rmdir(folderName,'s');
-end
-
-%% folder content moveout
-srcFolder = 'UnsteadyModel_1993';
-dstFolder = '.';
-
-movefile(fullfile(srcFolder,'*'), dstFolder);
-
-%% folder creation
-newFolder = 'Visuals';
-
-% create folder if it does not exist
-if ~exist(newFolder,'dir')
-    mkdir(newFolder);
-end
-
-%% move file into folder
-movefile('/Users/uwstuff/Desktop/MATLAB/UnsteadyModel_1993/AR_definition.png', newFolder);
+% %% folder deletion
+% folderName = 'slprj';
+% 
+% if exist(folderName,'dir')
+%     rmdir(folderName,'s');
+% end
+% 
+% %% folder content moveout
+% srcFolder = 'UnsteadyModel_1993';
+% dstFolder = '.';
+% 
+% movefile(fullfile(srcFolder,'*'), dstFolder);
+% 
+% %% folder creation
+% newFolder = 'Visuals';
+% 
+% % create folder if it does not exist
+% if ~exist(newFolder,'dir')
+%     mkdir(newFolder);
+% end
+% 
+% %% move file into folder
+% movefile('/Users/uwstuff/Desktop/MATLAB/UnsteadyModel_1993/AR_definition.png', newFolder);
 
 %% save images to pdf
 % get all open figures

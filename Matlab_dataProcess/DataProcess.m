@@ -6,11 +6,12 @@ clf;
 close all;
 % lengthen BTI or find better encoder. 
 %% Load data and assign names
-pdfName = 'leaf_60rpm_40IP_40deg.pdf';
-LC_File = "LC_60rpm_40IP_30deg_maxWindv1.mat";
-mR_File = "Leaf_60rpm_40IP_30deg.mat";
+pdfName = 'Still_100rpm_0IP_30OP_0OS.pdf';
+LC_File = "LC_100rpm_0IP_30OP_0OS.mat";
+mR_File = "mR_100rpm_0IP_30OP_0OS.mat";
 LC_data = load(LC_File);
 mR_data = load(mR_File);
+save = 1;
 
 %% Load load cell data
 
@@ -27,12 +28,12 @@ Tz = LC_data.Tz;
 
 %% optional data re-zero
 % Optional re-zeroing of load cell data
-% Fx = Fx - mean(Fx(1:300));
-% Fy = Fy - mean(Fy(1:300));
-% Fz = Fz - mean(Fz(1:300));
-% Tx = Tx - mean(Tx(1:300));
-% Ty = Ty - mean(Ty(1:300));
-% Tz = Tz - mean(Tz(1:300));
+Fx = Fx - mean(Fx(1:300));
+Fy = Fy - mean(Fy(1:300));
+Fz = Fz - mean(Fz(1:300));
+Tx = Tx - mean(Tx(1:300));
+Ty = Ty - mean(Ty(1:300));
+Tz = Tz - mean(Tz(1:300));
 
 %% load myRio Data
 
@@ -84,6 +85,7 @@ amp_ss_filt = filter(b, a, Amp_ss);
 %% Create time vectors
 t_trans = (0:length(wrpm_trans)-1) * BTI;
 t_ss    = (0:length(wrpm_ss)-1) * BTI;
+
 
 %% info
 fig_info = figure('Color','w');
@@ -362,5 +364,6 @@ grid on;
 timeWindow = input('Enter the time window for zoomed in plot (e.g., [start end]): ');
 xlim(fig_T_ax2,timeWindow);    
 %% save data to pdf
-
-DataSavePDF
+if (save == 1)
+      DataSavePDF
+end

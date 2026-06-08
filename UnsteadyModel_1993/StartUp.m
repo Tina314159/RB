@@ -8,7 +8,7 @@ clear all
 
 %% Define key parameters 
 U = 0.1;                % mean stream velocity (m/s)
-freq = 3;                % flapping frequency (Hz)
+freq = 1;                % flapping frequency (Hz)
 ang_freq = freq*2*pi;    % flapping frequency (rad/s)
 %AR = 5.0;               % Aspect Ratio
 
@@ -26,7 +26,7 @@ mu = 1.81e-5; % at room temp (Pa*s)
 maxV_servo = 60/0.032;                         % deg/s
 pitch_amp  = (deg2rad(maxV_servo))/ang_freq;   % Pitch def sine max amplitude (rad)
 pitch_lim  = deg2rad(1);                      % pitch amplitude  
-pitch_mean = deg2rad(1);                      % Mean pitch angle (radians)
+pitch_mean = deg2rad(40);                      % Mean pitch angle (radians)
 pitch_pha = 0.30;                              % pitch phase shift (decimal percent)
 % pitch_a mean value assumed to be zero. not added to equations
 
@@ -124,9 +124,6 @@ disp(C_k_Jones(k))
 model = 'Linkage';
 open_system(model)
 
-%model2 = 'Linkage2';
-%open_system(model2)
-
 %% Input Set up (omega & pitch)
 Speed_as_input = 1;     % 1 = speed input, -1 = torque input
 pitch_lookup_input = 1; %  1 = look up table (more flexible)
@@ -152,16 +149,16 @@ x2_multi = repmat(x2_datas, numPeriods, 1);
 
 
 %% input plot check
-figure 
-plot(t_multi, x1_multi);
-hold on
-plot(t_multi, x2_multi);
-plot(t_samp,pitch_data * 180/pi);   %correct sign convention 
-                                    % + angle of incedence/pitch = nose up
-legend('Inboard angle (deg)','Outboard angle (deg)','Wing Tip Pitch (deg)')
-title("Angle Values")
-xlabel('Time (s)')
-ylabel('Angle (deg)')
+% figure 
+% plot(t_multi, x1_multi);
+% hold on
+% plot(t_multi, x2_multi);
+% plot(t_samp,pitch_data * 180/pi);   %correct sign convention 
+%                                     % + angle of incedence/pitch = nose up
+% legend('Inboard angle (deg)','Outboard angle (deg)','Wing Tip Pitch (deg)')
+% title("Angle Values")
+% xlabel('Time (s)')
+% ylabel('Angle (deg)')
 
 %% recreate wing  
 WingCreationDeletion; % recreates wing each time, so it return to default 
